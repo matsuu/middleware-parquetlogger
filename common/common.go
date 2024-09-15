@@ -105,6 +105,7 @@ func (pl *Logger) Export(filename string) {
 	go pl.run()
 }
 
+// Send sends data to goroutine
 func (pl *Logger) Send(row RowType) {
 	select {
 	case pl.ch <- row:

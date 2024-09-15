@@ -9,6 +9,7 @@ import (
 	"github.com/matsuu/middleware-parquetlogger/common"
 )
 
+// A Logger defines parameters for logging.
 type Logger struct {
 	common.Logger
 }
