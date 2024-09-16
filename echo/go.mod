@@ -4,7 +4,7 @@ go 1.23.1
 
 require (
 	github.com/labstack/echo/v4 v4.12.0
-	github.com/matsuu/middleware-parquetlogger/common v0.0.0-20240915151643-cc2636bc0eeb
+	github.com/parquet-go/parquet-go v0.23.0
 )
 
 require (
@@ -16,7 +16,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/parquet-go/parquet-go v0.23.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/segmentio/encoding v0.4.0 // indirect
