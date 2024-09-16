@@ -13,7 +13,7 @@ SELECT '# ' || strftime(min(StartTime), '%Y-%m-%d %H:%M:%S') || ' - ' || strftim
 .print "\n## By Count\n"
 
 SELECT
-  (100 * count(Pattern) / sum(count(Pattern)) OVER ())::DECIMAL(6,3) AS 'cum%',
+  (100 * count(Pattern) / sum(count(Pattern)) OVER ())::DECIMAL AS 'cum%',
   count(Pattern) AS cnt,
   count(CASE WHEN Status BETWEEN 100 AND 199 THEN 1 END) AS '1xx',
   count(CASE WHEN Status BETWEEN 200 AND 299 THEN 1 END) AS '2xx',
@@ -27,21 +27,21 @@ FROM logs GROUP BY ALL ORDER BY cnt DESC;
 .print "\n## By Latency\n"
 
 SELECT
-  (100 * sum(Latency) / sum(sum(Latency)) OVER ())::DECIMAL(6,3) AS 'cum%',
+  (100 * sum(Latency) / sum(sum(Latency)) OVER ())::DECIMAL AS 'cum%',
   count(Pattern) AS cnt,
-  (sum(Latency)/1e9)::DECIMAL(38,6) AS sum,
-  (min(Latency)/1e9)::DECIMAL(38,6) AS min,
-  (avg(Latency)/1e9)::DECIMAL(38,6) AS avg,
-  (quantile_disc(Latency,0.5)/1e9)::DECIMAL(38,6) AS p50,
-  (quantile_disc(Latency,0.99)/1e9)::DECIMAL(38,6) AS p99,
-  (max(Latency)/1e9)::DECIMAL(38,6) AS max,
+  (sum(Latency)/1e9)::DECIMAL AS sum,
+  (min(Latency)/1e9)::DECIMAL AS min,
+  (avg(Latency)/1e9)::DECIMAL AS avg,
+  (quantile_disc(Latency,0.5)/1e9)::DECIMAL AS p50,
+  (quantile_disc(Latency,0.99)/1e9)::DECIMAL AS p99,
+  (max(Latency)/1e9)::DECIMAL AS max,
   Method, Pattern
 FROM logs GROUP BY ALL ORDER BY sum DESC;
 
 .print "\n## By Upload Bytes\n"
 
 SELECT
-  (100 * sum(ContentLength) / sum(sum(ContentLength)) OVER ())::DECIMAL(6,3) AS 'cum%',
+  (100 * sum(ContentLength) / sum(sum(ContentLength)) OVER ())::DECIMAL AS 'cum%',
   count(Pattern) AS cnt,
   sum(ContentLength) AS sum,
   min(ContentLength) AS min,
@@ -55,7 +55,7 @@ FROM logs WHERE ContentLength IS NOT NULL GROUP BY ALL ORDER BY sum DESC;
 .print "\n## By Download Bytes\n"
 
 SELECT
-  (100 * sum(ResponseSize) / sum(sum(ResponseSize)) OVER ())::DECIMAL(6,3) AS 'cum%',
+  (100 * sum(ResponseSize) / sum(sum(ResponseSize)) OVER ())::DECIMAL AS 'cum%',
   count(Pattern) AS cnt,
   sum(ResponseSize) AS sum,
   min(ResponseSize) AS min,
@@ -69,7 +69,7 @@ FROM logs GROUP BY ALL ORDER BY sum DESC;
 .print "\n## Top Protocols\n"
 
 SELECT
-  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL(6,3) AS 'cum%',
+  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL AS 'cum%',
   count(*) AS cnt,
   Protocol
 FROM logs GROUP BY ALL ORDER BY cnt DESC, Protocol ASC LIMIT 40;
@@ -77,7 +77,7 @@ FROM logs GROUP BY ALL ORDER BY cnt DESC, Protocol ASC LIMIT 40;
 .print "\n## Top RemoteAddr\n"
 
 SELECT
-  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL(6,3) AS 'cum%',
+  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL AS 'cum%',
   count(*) AS cnt,
   RemoteAddr
 FROM logs GROUP BY ALL ORDER BY cnt DESC, RemoteAddr ASC LIMIT 40;
@@ -85,7 +85,7 @@ FROM logs GROUP BY ALL ORDER BY cnt DESC, RemoteAddr ASC LIMIT 40;
 .print "\n## Top Host\n"
 
 SELECT
-  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL(6,3) AS 'cum%',
+  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL AS 'cum%',
   count(*) AS cnt,
   Host
 FROM logs GROUP BY ALL ORDER BY cnt DESC, Host ASC LIMIT 40;
@@ -93,7 +93,7 @@ FROM logs GROUP BY ALL ORDER BY cnt DESC, Host ASC LIMIT 40;
 .print "\n## Top Method\n"
 
 SELECT
-  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL(6,3) AS 'cum%',
+  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL AS 'cum%',
   count(*) AS cnt,
   Method
 FROM logs GROUP BY ALL ORDER BY cnt DESC, Method ASC LIMIT 40;
@@ -101,7 +101,7 @@ FROM logs GROUP BY ALL ORDER BY cnt DESC, Method ASC LIMIT 40;
 .print "\n## Top Status\n"
 
 SELECT
-  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL(6,3) AS 'cum%',
+  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL AS 'cum%',
   count(*) AS cnt,
   Status
 FROM logs GROUP BY ALL ORDER BY cnt DESC, Status ASC LIMIT 40;
@@ -109,8 +109,8 @@ FROM logs GROUP BY ALL ORDER BY cnt DESC, Status ASC LIMIT 40;
 .print "\n## Top Latency\n"
 
 SELECT
-  (100 * Latency / sum(Latency) OVER ())::DECIMAL(6,3) AS 'cum%',
-  (Latency/1e9)::DECIMAL(38,6) AS Latency,
+  (100 * Latency / sum(Latency) OVER ())::DECIMAL AS 'cum%',
+  (Latency/1e9)::DECIMAL AS Latency,
   Method,
   Host,
   URL
@@ -128,7 +128,7 @@ SELECT
   struct_extract(header, 'key') as key,
   count(header) AS cnt,
   count(DISTINCT header) AS uniqCnt,
-  entropy(header)::DECIMAL(38,3) AS entropy,
+  entropy(header)::DECIMAL AS entropy,
   mode(struct_extract(header, 'value')) AS mode
 FROM (
   SELECT unnest(map_entries(RequestHeaders)) AS header FROM logs
@@ -155,7 +155,7 @@ SELECT
   struct_extract(header, 'key') as key,
   count(header) AS cnt,
   count(DISTINCT header) AS uniqCnt,
-  entropy(header)::DECIMAL(38,3) AS entropy,
+  entropy(header)::DECIMAL AS entropy,
   mode(struct_extract(header, 'value')) AS mode
 FROM (
   SELECT unnest(map_entries(ResponseHeaders)) AS header FROM logs
@@ -165,7 +165,7 @@ FROM (
 
 SELECT
   StartTime,
-  (Latency/1e9)::DECIMAL(38,6) AS Latency,
+  (Latency/1e9)::DECIMAL AS Latency,
   Status,
   Host,
   URL,
