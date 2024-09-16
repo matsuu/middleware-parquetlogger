@@ -1,15 +1,14 @@
-// Package echo is middleware for echo framework
-package echo
+// Package gin is middleware for Gin Web Framework
+package gin
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"time"
 
-	"github.com/labstack/echo/v4"
+	"github.com/gin-gonic/gin"
 	"github.com/parquet-go/parquet-go"
 	"github.com/parquet-go/parquet-go/format"
 )
@@ -125,44 +124,33 @@ func (pl *Logger) send(row RowType) {
 }
 
 // Middleware returns logger middleware.
-func (pl *Logger) Middleware() echo.MiddlewareFunc {
+func (pl *Logger) Middleware() gin.HandlerFunc {
 	now := time.Now
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// Before
-			req := c.Request()
-			res := c.Response()
-			start := now()
+	return func(c *gin.Context) {
+		// Before
+		log.Print("before pass")
+		start := now()
+		// Next
+		c.Next()
 
-			// Next
-			err := next(c)
-
-			//After
-			latency := now().Sub(start)
-
-			row := RowType{
-				StartTime:       start,
-				Latency:         latency,
-				Protocol:        req.Proto,
-				RemoteAddr:      c.RealIP(),
-				Host:            req.Host,
-				Method:          req.Method,
-				URL:             req.RequestURI,
-				Pattern:         c.Path(),
-				Status:          res.Status,
-				ContentLength:   req.ContentLength,
-				ResponseSize:    res.Size,
-				RequestHeaders:  req.Header,
-				ResponseHeaders: res.Header(),
-			}
-			if err != nil {
-				var httpErr *echo.HTTPError
-				if errors.As(err, &httpErr) {
-					row.Status = httpErr.Code
-				}
-			}
-			pl.send(row)
-			return err
+		// After
+		log.Print("after pass")
+		latency := now().Sub(start)
+		row := RowType{
+			StartTime:       start,
+			Latency:         latency,
+			Protocol:        c.Request.Proto,
+			RemoteAddr:      c.Request.RemoteAddr,
+			Host:            c.Request.Host,
+			Method:          c.Request.Method,
+			URL:             c.Request.URL.String(),
+			Pattern:         c.FullPath(),
+			Status:          c.Writer.Status(),
+			ContentLength:   c.Request.ContentLength,
+			ResponseSize:    int64(c.Writer.Size()),
+			RequestHeaders:  c.Request.Header,
+			ResponseHeaders: c.Writer.Header(),
 		}
+		pl.send(row)
 	}
 }

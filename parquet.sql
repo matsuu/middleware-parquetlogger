@@ -133,7 +133,7 @@ FROM logs ORDER BY Latency DESC LIMIT 40;
 .print "\n## Request Headers\n"
 
 SELECT *,count(*) AS cnt FROM (
-  SELECT Method, Pattern,list_sort(map_keys(RequestHeader)) as headers from logs
+  SELECT Method, Pattern, list_sort(map_keys(RequestHeaders)) as headers from logs
 ) GROUP BY ALL ORDER BY Pattern, Method, cnt DESC, headers;
 
 .print "\n## Cookies Count\n"
@@ -142,8 +142,16 @@ SELECT
   cnt AS visit_cnt,
   count(cnt) AS unique_cnt
 FROM (
-  SELECT count(*) AS cnt FROM logs GROUP BY map_extract(RequestHeader, 'Cookie')
+  SELECT count(*) AS cnt FROM logs GROUP BY map_extract(RequestHeaders, 'Cookie')
 ) GROUP BY cnt ORDER BY visit_cnt DESC, unique_cnt DESC;
+
+.print "\n## Response Headers\n"
+
+SELECT *,count(*) AS cnt FROM (
+  SELECT Method, Pattern, list_sort(map_keys(ResponseHeaders)) as headers from logs
+) GROUP BY ALL ORDER BY Pattern, Method, cnt DESC, headers;
+
+.print "\n## Cookies Count\n"
 
 .print "\n## All Errors\n"
 

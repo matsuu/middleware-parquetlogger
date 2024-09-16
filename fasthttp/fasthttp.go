@@ -1,17 +1,16 @@
-// Package echo is middleware for echo framework
-package echo
+// Package fasthttp is middleware for fasthttp
+package fasthttp
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"time"
 
-	"github.com/labstack/echo/v4"
 	"github.com/parquet-go/parquet-go"
 	"github.com/parquet-go/parquet-go/format"
+	"github.com/valyala/fasthttp"
 )
 
 // RowType contains extracted values from logger.
@@ -125,44 +124,48 @@ func (pl *Logger) send(row RowType) {
 }
 
 // Middleware returns logger middleware.
-func (pl *Logger) Middleware() echo.MiddlewareFunc {
+func (pl *Logger) Middleware(requestHandler fasthttp.RequestHandler) fasthttp.RequestHandler {
 	now := time.Now
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			// Before
-			req := c.Request()
-			res := c.Response()
-			start := now()
+	return func(ctx *fasthttp.RequestCtx) {
+		// Before
+		start := now()
 
-			// Next
-			err := next(c)
+		// Next
+		requestHandler(ctx)
 
-			//After
-			latency := now().Sub(start)
-
-			row := RowType{
-				StartTime:       start,
-				Latency:         latency,
-				Protocol:        req.Proto,
-				RemoteAddr:      c.RealIP(),
-				Host:            req.Host,
-				Method:          req.Method,
-				URL:             req.RequestURI,
-				Pattern:         c.Path(),
-				Status:          res.Status,
-				ContentLength:   req.ContentLength,
-				ResponseSize:    res.Size,
-				RequestHeaders:  req.Header,
-				ResponseHeaders: res.Header(),
+		// After
+		latency := now().Sub(start)
+		requestHeaders := make(map[string][]string)
+		responseHeaders := make(map[string][]string)
+		ctx.Request.Header.VisitAll(func(key, value []byte) {
+			k, v := string(key), string(value)
+			if _, ok := requestHeaders[k]; !ok {
+				requestHeaders[k] = make([]string, 0, 1)
 			}
-			if err != nil {
-				var httpErr *echo.HTTPError
-				if errors.As(err, &httpErr) {
-					row.Status = httpErr.Code
-				}
+			requestHeaders[k] = append(requestHeaders[k], v)
+		})
+		ctx.Response.Header.VisitAll(func(key, value []byte) {
+			k, v := string(key), string(value)
+			if _, ok := responseHeaders[k]; !ok {
+				responseHeaders[k] = make([]string, 0, 1)
 			}
-			pl.send(row)
-			return err
+			responseHeaders[k] = append(responseHeaders[k], v)
+		})
+		row := RowType{
+			StartTime:       start,
+			Latency:         latency,
+			Protocol:        string(ctx.Request.Header.Protocol()),
+			RemoteAddr:      ctx.RemoteAddr().String(),
+			Host:            string(ctx.Host()),
+			Method:          string(ctx.Method()),
+			URL:             ctx.URI().String(),
+			Pattern:         ctx.URI().String(),
+			Status:          ctx.Response.StatusCode(),
+			ContentLength:   int64(ctx.Request.Header.ContentLength()),
+			ResponseSize:    int64(len(ctx.Response.String())),
+			RequestHeaders:  requestHeaders,
+			ResponseHeaders: responseHeaders,
 		}
+		pl.send(row)
 	}
 }
