@@ -15,10 +15,12 @@ SELECT '# ' || strftime(min(StartTime), '%Y-%m-%d %H:%M:%S') || ' - ' || strftim
 SELECT
   (100 * count(Pattern) / sum(count(Pattern)) OVER ())::DECIMAL(6,3) AS 'cum%',
   count(Pattern) AS cnt,
+  count(CASE WHEN Status BETWEEN 100 AND 199 THEN 1 END) AS '1xx',
   count(CASE WHEN Status BETWEEN 200 AND 299 THEN 1 END) AS '2xx',
   count(CASE WHEN Status BETWEEN 300 AND 399 THEN 1 END) AS '3xx',
   count(CASE WHEN Status BETWEEN 400 AND 499 THEN 1 END) AS '4xx',
   count(CASE WHEN Status BETWEEN 500 AND 599 THEN 1 END) AS '5xx',
+  count(CASE WHEN Status NOT BETWEEN 100 AND 599 THEN 1 END) AS 'other',
   Method, Pattern
 FROM logs GROUP BY ALL ORDER BY cnt DESC;
 
@@ -96,22 +98,6 @@ SELECT
   Method
 FROM logs GROUP BY ALL ORDER BY cnt DESC, Method ASC LIMIT 40;
 
-.print "\n## Top Referer\n"
-
-SELECT
-  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL(6,3) AS 'cum%',
-  count(*) AS cnt,
-  Referer
-FROM logs GROUP BY ALL ORDER BY cnt DESC, Referer ASC LIMIT 40;
-
-.print "\n## Top UserAgent\n"
-
-SELECT
-  (100 * count(*) / sum(count(*)) OVER ())::DECIMAL(6,3) AS 'cum%',
-  count(*) AS cnt,
-  UserAgent
-FROM logs GROUP BY ALL ORDER BY cnt DESC, UserAgent ASC LIMIT 40;
-
 .print "\n## Top Status\n"
 
 SELECT
@@ -136,14 +122,26 @@ SELECT *,count(*) AS cnt FROM (
   SELECT Method, Pattern, list_sort(map_keys(RequestHeaders)) as headers from logs
 ) GROUP BY ALL ORDER BY Pattern, Method, cnt DESC, headers;
 
+.print "\n## Request Headers Analysis\n"
+
+SELECT
+  struct_extract(header, 'key') as key,
+  count(header) AS cnt,
+  count(DISTINCT header) AS uniqCnt,
+  entropy(header)::DECIMAL(38,3) AS entropy,
+  mode(struct_extract(header, 'value')) AS mode
+FROM (
+  SELECT unnest(map_entries(RequestHeaders)) AS header FROM logs
+) GROUP BY ALL ORDER BY key, cnt DESC, uniqCnt DESC;
+
 .print "\n## Cookies Count\n"
 
 SELECT
-  cnt AS visit_cnt,
-  count(cnt) AS unique_cnt
+  cnt AS visitCnt,
+  count(cnt) AS uniqCnt
 FROM (
   SELECT count(*) AS cnt FROM logs GROUP BY map_extract(RequestHeaders, 'Cookie')
-) GROUP BY cnt ORDER BY visit_cnt DESC, unique_cnt DESC;
+) GROUP BY cnt ORDER BY visitCnt DESC, uniqCnt DESC;
 
 .print "\n## Response Headers\n"
 
@@ -151,7 +149,17 @@ SELECT *,count(*) AS cnt FROM (
   SELECT Method, Pattern, list_sort(map_keys(ResponseHeaders)) as headers from logs
 ) GROUP BY ALL ORDER BY Pattern, Method, cnt DESC, headers;
 
-.print "\n## Cookies Count\n"
+.print "\n## Response Headers Analysis\n"
+
+SELECT
+  struct_extract(header, 'key') as key,
+  count(header) AS cnt,
+  count(DISTINCT header) AS uniqCnt,
+  entropy(header)::DECIMAL(38,3) AS entropy,
+  mode(struct_extract(header, 'value')) AS mode
+FROM (
+  SELECT unnest(map_entries(ResponseHeaders)) AS header FROM logs
+) GROUP BY ALL ORDER BY key, cnt DESC, uniqCnt DESC;
 
 .print "\n## All Errors\n"
 
