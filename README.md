@@ -14,7 +14,6 @@ func main() {
 
 	pLogger := pl.NewLogger()
 	e.Use(pLogger.Middleware())
-
 	go func() {
 		sig := make(chan os.Signal)
 		signal.Notify(sig, syscall.SIGUSR1)
@@ -35,11 +34,9 @@ import (
 )
 
 func main() {
-	http.Handle("/", http
 	e := echo.New()
 
 	pLogger := pl.NewLogger()
-
 	go func() {
 		sig := make(chan os.Signal)
 		signal.Notify(sig, syscall.SIGUSR1)
@@ -50,6 +47,33 @@ func main() {
 
 	http.Handle("/", pLogger.Middleware(helloFunc))
 	http.ListenAndServe(":8000", nil)
+}
+```
+
+## gin
+
+```go
+import (
+	"github.com/gin-gonic/gin"
+	pl "github.com/matsuu/middleware-parquetlogger/gin"
+)
+
+func main() {
+	r := gin.Default()
+
+	pl := NewLogger()
+	r.Use(pl.Middleware())
+	go func() {
+		sig := make(chan os.Signal)
+		signal.Notify(sig, syscall.SIGUSR1)
+		for range sig {
+			pLogger.Export("/tmp/log.parquet")
+		}
+	}()
+
+	// ...
+
+	r.Run()
 }
 ```
 
