@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/fasthttp/router"
 	"github.com/parquet-go/parquet-go"
 	"github.com/parquet-go/parquet-go/format"
 	"github.com/valyala/fasthttp"
@@ -126,7 +127,7 @@ func (pl *Logger) send(row RowType) {
 // Middleware returns logger middleware.
 func (pl *Logger) Middleware(requestHandler fasthttp.RequestHandler) fasthttp.RequestHandler {
 	now := time.Now
-	return func(ctx *fasthttp.RequestCtx) {
+	return fasthttp.RequestHandler(func(ctx *fasthttp.RequestCtx) {
 		// Before
 		start := now()
 
@@ -151,6 +152,14 @@ func (pl *Logger) Middleware(requestHandler fasthttp.RequestHandler) fasthttp.Re
 			}
 			responseHeaders[k] = append(responseHeaders[k], v)
 		})
+		var contentLength int64
+		if ctx.Request.Header.ContentLength() >= 0 {
+			contentLength = int64(ctx.Request.Header.ContentLength())
+		}
+		routePath, ok := ctx.UserValue(router.MatchedRoutePathParam).(string)
+		if !ok {
+			routePath = ""
+		}
 		row := RowType{
 			StartTime:       start,
 			Latency:         latency,
@@ -159,13 +168,13 @@ func (pl *Logger) Middleware(requestHandler fasthttp.RequestHandler) fasthttp.Re
 			Host:            string(ctx.Host()),
 			Method:          string(ctx.Method()),
 			URL:             ctx.URI().String(),
-			Pattern:         ctx.URI().String(),
+			Pattern:         routePath,
 			Status:          ctx.Response.StatusCode(),
-			ContentLength:   int64(ctx.Request.Header.ContentLength()),
+			ContentLength:   contentLength,
 			ResponseSize:    int64(len(ctx.Response.String())),
 			RequestHeaders:  requestHeaders,
 			ResponseHeaders: responseHeaders,
 		}
 		pl.send(row)
-	}
+	})
 }

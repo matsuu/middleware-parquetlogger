@@ -10,23 +10,26 @@ import (
 	"os/exec"
 	"testing"
 
-	"github.com/qiangxue/fasthttp-routing"
+	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
 )
 
 func TestMiddleware(t *testing.T) {
-	router := routing.New()
+	r := router.New()
+	r.SaveMatchedRoutePath = true
 
-	router.Get("/", func(c *routing.Context) error {
-		fmt.Fprintf(c, "Hello, world!")
-		return nil
+	r.GET("/user/{id}", func(ctx *fasthttp.RequestCtx) {
+		fmt.Fprintf(ctx, "Hello, %s world!", ctx.UserValue("id"))
+	})
+	r.POST("/user", func(ctx *fasthttp.RequestCtx) {
+		fmt.Fprintf(ctx, "Hello, %s world!", ctx.FormValue("id"))
 	})
 
 	listen := "localhost:8989"
 	filename := "/tmp/fasthttp.parquet"
 
 	pl := NewLogger()
-	go fasthttp.ListenAndServe(listen, pl.Middleware(router.HandleRequest))
+	go fasthttp.ListenAndServe(listen, pl.Middleware(r.Handler))
 
 	if res, err := http.Get(fmt.Sprintf("http://%s/user/http-client", listen)); err != nil {
 		t.Fatalf("Failed to get /user/http-client: %v", err)

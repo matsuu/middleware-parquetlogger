@@ -77,6 +77,33 @@ func main() {
 }
 ```
 
+## fasthttp
+
+```go
+import (
+	"github.com/fasthttp/router"
+	pl "github.com/matsuu/middleware-parquetlogger/fasthttp"
+	"github.com/valyala/fasthttp"
+)
+
+func main() {
+	r := router.New()
+	r.SaveMatchedRoutePath = true
+
+	// ...
+
+	pl := NewLogger()
+	go func() {
+		sig := make(chan os.Signal)
+		signal.Notify(sig, syscall.SIGUSR1)
+		for range sig {
+			pLogger.Export("/tmp/log.parquet")
+		}
+	}()
+	fasthttp.ListenAndServe(":8080", pl.Middleware(r.Handler))
+}
+```
+
 # Analyze
 
 ```sh
