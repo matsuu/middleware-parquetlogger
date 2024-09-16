@@ -104,6 +104,28 @@ func main() {
 }
 ```
 
+## chi
+
+```go
+import (
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+	pl "github.com/matsuu/middleware-parquetlogger/chi"
+)
+
+func main() {
+	r := chi.NewRouter()
+
+	pl := NewLogger()
+	r.Use(pl.Middleware)
+
+	// ...
+
+	http.ListenAndServe(":8080", r)
+}
+```
+
 # Analyze
 
 ```sh
