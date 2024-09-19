@@ -22,7 +22,7 @@ SELECT
   count(CASE WHEN Status BETWEEN 500 AND 599 THEN 1 END) AS '5xx',
   count(CASE WHEN Status NOT BETWEEN 100 AND 599 THEN 1 END) AS 'other',
   Method, Pattern
-FROM logs GROUP BY ALL ORDER BY cnt DESC;
+FROM logs GROUP BY ALL ORDER BY cnt DESC LIMIT 40;
 
 .print "\n## By Latency\n"
 
@@ -36,21 +36,21 @@ SELECT
   (quantile_disc(Latency,0.99)/1e9)::DECIMAL AS p99,
   (max(Latency)/1e9)::DECIMAL AS max,
   Method, Pattern
-FROM logs GROUP BY ALL ORDER BY sum DESC;
+FROM logs GROUP BY ALL ORDER BY sum DESC LIMIT 40;
 
 .print "\n## By Upload Bytes\n"
 
 SELECT
-  (100 * sum(ContentLength) / sum(sum(ContentLength)) OVER ())::DECIMAL AS 'cum%',
+  (100 * sum(RequestSize) / sum(sum(RequestSize)) OVER ())::DECIMAL AS 'cum%',
   count(Pattern) AS cnt,
-  sum(ContentLength) AS sum,
-  min(ContentLength) AS min,
-  cast(avg(ContentLength) as BIGINT) AS avg,
-  quantile_disc(ContentLength,0.5) AS p50,
-  quantile_disc(ContentLength,0.99) AS p99,
-  max(ContentLength) AS max,
+  sum(RequestSize) AS sum,
+  min(RequestSize) AS min,
+  cast(avg(RequestSize) as BIGINT) AS avg,
+  quantile_disc(RequestSize,0.5) AS p50,
+  quantile_disc(RequestSize,0.99) AS p99,
+  max(RequestSize) AS max,
   Method, Pattern
-FROM logs WHERE ContentLength IS NOT NULL GROUP BY ALL ORDER BY sum DESC;
+FROM logs WHERE RequestSize IS NOT NULL GROUP BY ALL ORDER BY sum DESC LIMIT 40;
 
 .print "\n## By Download Bytes\n"
 
@@ -64,7 +64,7 @@ SELECT
   quantile_disc(ResponseSize,0.99) AS p99,
   max(ResponseSize) AS max,
   Method, Pattern
-FROM logs GROUP BY ALL ORDER BY sum DESC;
+FROM logs GROUP BY ALL ORDER BY sum DESC LIMIT 40;
 
 .print "\n## Top Protocols\n"
 
@@ -169,4 +169,5 @@ SELECT
   Status,
   Host,
   URL,
-FROM logs WHERE Status >= 400 ORDER BY StartTime;
+  Error
+FROM logs WHERE Status >= 400 OR Error IS NOT NULL ORDER BY StartTime;

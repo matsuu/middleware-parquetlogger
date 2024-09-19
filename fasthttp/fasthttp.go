@@ -25,10 +25,11 @@ type RowType struct {
 	URL             string              `parquet:",dict"`
 	Pattern         string              `parquet:",dict"`
 	Status          int                 `parquet:",dict"`
-	ContentLength   int64               `parquet:",delta"`
+	RequestSize     int64               `parquet:",delta"`
 	ResponseSize    int64               `parquet:",delta"`
 	RequestHeaders  map[string][]string `parquet:","`
 	ResponseHeaders map[string][]string `parquet:","`
+	Error           *string             `parquet:","`
 }
 
 // A Logger defines parameters for logging.
@@ -152,9 +153,9 @@ func (pl *Logger) Middleware(requestHandler fasthttp.RequestHandler) fasthttp.Re
 			}
 			responseHeaders[k] = append(responseHeaders[k], v)
 		})
-		var contentLength int64
+		var requestSize int64
 		if ctx.Request.Header.ContentLength() >= 0 {
-			contentLength = int64(ctx.Request.Header.ContentLength())
+			requestSize = int64(ctx.Request.Header.ContentLength())
 		}
 		routePath, ok := ctx.UserValue(router.MatchedRoutePathParam).(string)
 		if !ok {
@@ -170,7 +171,7 @@ func (pl *Logger) Middleware(requestHandler fasthttp.RequestHandler) fasthttp.Re
 			URL:             ctx.URI().String(),
 			Pattern:         routePath,
 			Status:          ctx.Response.StatusCode(),
-			ContentLength:   contentLength,
+			RequestSize:     requestSize,
 			ResponseSize:    int64(len(ctx.Response.String())),
 			RequestHeaders:  requestHeaders,
 			ResponseHeaders: responseHeaders,

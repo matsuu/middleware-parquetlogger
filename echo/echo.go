@@ -25,10 +25,11 @@ type RowType struct {
 	URL             string              `parquet:",dict"`
 	Pattern         string              `parquet:",dict"`
 	Status          int                 `parquet:",dict"`
-	ContentLength   int64               `parquet:",delta"`
+	RequestSize     int64               `parquet:",delta"`
 	ResponseSize    int64               `parquet:",delta"`
 	RequestHeaders  map[string][]string `parquet:","`
 	ResponseHeaders map[string][]string `parquet:","`
+	Error           *string             `parquet:","`
 }
 
 // A Logger defines parameters for logging.
@@ -102,7 +103,6 @@ L:
 	}
 	if err := f.Close(); err != nil {
 		return fmt.Errorf("Failed to close tempfile: %w", err)
-
 	}
 	return nil
 }
@@ -150,7 +150,7 @@ func (pl *Logger) Middleware() echo.MiddlewareFunc {
 				URL:             req.RequestURI,
 				Pattern:         c.Path(),
 				Status:          res.Status,
-				ContentLength:   req.ContentLength,
+				RequestSize:     req.ContentLength,
 				ResponseSize:    res.Size,
 				RequestHeaders:  req.Header,
 				ResponseHeaders: res.Header(),
@@ -159,6 +159,11 @@ func (pl *Logger) Middleware() echo.MiddlewareFunc {
 				var httpErr *echo.HTTPError
 				if errors.As(err, &httpErr) {
 					row.Status = httpErr.Code
+					errStr := fmt.Sprintf("%v", httpErr.Message)
+					row.Error = &errStr
+				} else {
+					errStr := err.Error()
+					row.Error = &errStr
 				}
 			}
 			pl.send(row)

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -31,6 +32,7 @@ func TestMiddleware(t *testing.T) {
 	go func() {
 		http.ListenAndServe(listen, r)
 	}()
+	time.Sleep(1 * time.Second)
 
 	if res, err := http.Get(fmt.Sprintf("http://%s/user/http-client", listen)); err != nil {
 		t.Fatalf("Failed to get /user/http-client: %v", err)

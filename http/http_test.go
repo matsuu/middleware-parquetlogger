@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 )
 
 func TestMiddleware(t *testing.T) {
@@ -26,6 +27,7 @@ func TestMiddleware(t *testing.T) {
 	go func() {
 		http.ListenAndServe(listen, pl.Middleware(mux))
 	}()
+	time.Sleep(1 * time.Second)
 
 	if res, err := http.Get(fmt.Sprintf("http://%s/user/http-client", listen)); err != nil {
 		t.Fatalf("Failed to get /user/http-client: %v", err)

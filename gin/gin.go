@@ -24,10 +24,11 @@ type RowType struct {
 	URL             string              `parquet:",dict"`
 	Pattern         string              `parquet:",dict"`
 	Status          int                 `parquet:",dict"`
-	ContentLength   int64               `parquet:",delta"`
+	RequestSize     int64               `parquet:",delta"`
 	ResponseSize    int64               `parquet:",delta"`
 	RequestHeaders  map[string][]string `parquet:","`
 	ResponseHeaders map[string][]string `parquet:","`
+	Error           *string             `parquet:","`
 }
 
 // A Logger defines parameters for logging.
@@ -128,13 +129,11 @@ func (pl *Logger) Middleware() gin.HandlerFunc {
 	now := time.Now
 	return func(c *gin.Context) {
 		// Before
-		log.Print("before pass")
 		start := now()
 		// Next
 		c.Next()
 
 		// After
-		log.Print("after pass")
 		latency := now().Sub(start)
 		row := RowType{
 			StartTime:       start,
@@ -146,7 +145,7 @@ func (pl *Logger) Middleware() gin.HandlerFunc {
 			URL:             c.Request.URL.String(),
 			Pattern:         c.FullPath(),
 			Status:          c.Writer.Status(),
-			ContentLength:   c.Request.ContentLength,
+			RequestSize:     c.Request.ContentLength,
 			ResponseSize:    int64(c.Writer.Size()),
 			RequestHeaders:  c.Request.Header,
 			ResponseHeaders: c.Writer.Header(),

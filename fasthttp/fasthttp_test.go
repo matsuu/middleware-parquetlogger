@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 
 	"github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
@@ -30,6 +31,7 @@ func TestMiddleware(t *testing.T) {
 
 	pl := NewLogger()
 	go fasthttp.ListenAndServe(listen, pl.Middleware(r.Handler))
+	time.Sleep(1 * time.Second)
 
 	if res, err := http.Get(fmt.Sprintf("http://%s/user/http-client", listen)); err != nil {
 		t.Fatalf("Failed to get /user/http-client: %v", err)

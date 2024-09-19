@@ -25,10 +25,11 @@ type RowType struct {
 	URL             string              `parquet:",dict"`
 	Pattern         string              `parquet:",dict"`
 	Status          int                 `parquet:",dict"`
-	ContentLength   int64               `parquet:",delta"`
+	RequestSize     int64               `parquet:",delta"`
 	ResponseSize    int64               `parquet:",delta"`
 	RequestHeaders  map[string][]string `parquet:","`
 	ResponseHeaders map[string][]string `parquet:","`
+	Error           *string             `parquet:","`
 }
 
 // A Logger defines parameters for logging.
@@ -177,7 +178,7 @@ func (pl *Logger) Middleware(next http.Handler) http.Handler {
 			URL:             r.URL.String(),
 			Pattern:         r.Pattern,
 			Status:          status,
-			ContentLength:   r.ContentLength,
+			RequestSize:     r.ContentLength,
 			ResponseSize:    mw.Size(),
 			RequestHeaders:  r.Header,
 			ResponseHeaders: mw.Header(),
