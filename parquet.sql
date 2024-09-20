@@ -125,14 +125,15 @@ SELECT *,count(*) AS cnt FROM (
 .print "\n## Request Headers Analysis\n"
 
 SELECT
-  struct_extract(header, 'key') as key,
-  count(header) AS cnt,
-  count(DISTINCT header) AS uniqCnt,
-  entropy(header)::DECIMAL AS entropy,
-  mode(struct_extract(header, 'value')) AS mode
+  (100 * count(s.key)/ (SELECT count(*) FROM logs))::DECIMAL AS 'cum%',
+  s.key,
+  count(s.key) AS cnt,
+  count(DISTINCT s.value) AS uniqCnt,
+  entropy(s.value)::DECIMAL AS entropy,
+  mode(s.value) AS mode
 FROM (
-  SELECT unnest(map_entries(RequestHeaders)) AS header FROM logs
-) GROUP BY ALL ORDER BY key, cnt DESC, uniqCnt DESC;
+  SELECT unnest(list_transform(map_entries(RequestHeaders), s -> {'key':lower(s.key), 'value':s.value})) AS s FROM logs
+) GROUP BY ALL ORDER BY s.key, cnt DESC, uniqCnt DESC;
 
 .print "\n## Cookies Count\n"
 
@@ -152,14 +153,15 @@ SELECT *,count(*) AS cnt FROM (
 .print "\n## Response Headers Analysis\n"
 
 SELECT
-  struct_extract(header, 'key') as key,
-  count(header) AS cnt,
-  count(DISTINCT header) AS uniqCnt,
-  entropy(header)::DECIMAL AS entropy,
-  mode(struct_extract(header, 'value')) AS mode
+  (100 * count(s.key)/ (SELECT count(*) FROM logs))::DECIMAL AS 'cum%',
+  s.key,
+  count(s.key) AS cnt,
+  count(DISTINCT s.value) AS uniqCnt,
+  entropy(s.value)::DECIMAL AS entropy,
+  mode(s.value) AS mode
 FROM (
-  SELECT unnest(map_entries(ResponseHeaders)) AS header FROM logs
-) GROUP BY ALL ORDER BY key, cnt DESC, uniqCnt DESC;
+  SELECT unnest(list_transform(map_entries(ResponseHeaders), s -> {'key':lower(s.key), 'value':s.value})) AS s FROM logs
+) GROUP BY ALL ORDER BY s.key, cnt DESC, uniqCnt DESC;
 
 .print "\n## All Errors\n"
 
