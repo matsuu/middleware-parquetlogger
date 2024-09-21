@@ -150,6 +150,9 @@ func (pl *Logger) Middleware() gin.HandlerFunc {
 			RequestHeaders:  c.Request.Header,
 			ResponseHeaders: c.Writer.Header(),
 		}
+		if errStr := c.Errors.String(); errStr != "" {
+			row.Error = &errStr
+		}
 		pl.send(row)
 	}
 }
