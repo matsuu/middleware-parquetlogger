@@ -148,7 +148,7 @@ SELECT
   entropy(s.value)::DECIMAL AS entropy,
   mode(s.value) AS mode
 FROM (
-  SELECT unnest(list_transform(map_entries(RequestHeaders), s -> {'key':lower(s.key), 'value':s.value})) AS s FROM logs
+  SELECT unnest(map_entries(RequestHeaders).apply(s -> {'key':s.key COLLATE NOCASE, 'value':s.value})) AS s FROM logs
 ) GROUP BY ALL ORDER BY s.key, cnt DESC, uniqCnt DESC;
 
 .print "\n## Cookies Count\n"
@@ -176,7 +176,7 @@ SELECT
   entropy(s.value)::DECIMAL AS entropy,
   mode(s.value) AS mode
 FROM (
-  SELECT unnest(list_transform(map_entries(ResponseHeaders), s -> {'key':lower(s.key), 'value':s.value})) AS s FROM logs
+  SELECT unnest(map_entries(ResponseHeaders).apply(s -> {'key':s.key COLLATE NOCASE, 'value':s.value})) AS s FROM logs
 ) GROUP BY ALL ORDER BY s.key, cnt DESC, uniqCnt DESC;
 
 .print "\n## All SSL\n"
