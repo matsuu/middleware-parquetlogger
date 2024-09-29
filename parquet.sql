@@ -124,16 +124,17 @@ SELECT *,count(*) AS cnt FROM (
 
 .print "\n## Request Headers Analysis\n"
 
+WITH m AS MATERIALIZED (
+  SELECT unnest(map_entries(RequestHeaders).apply(s -> {'key':lower(s.key), 'value':s.value})) AS s FROM logs
+)
 SELECT
-  (100 * count(s.key)/ (SELECT count(*) FROM logs))::DECIMAL AS 'cum%',
+  (100 * count(s.key) / (SELECT count(*) FROM logs))::DECIMAL AS 'cum%',
   s.key,
   count(s.key) AS cnt,
   count(DISTINCT s.value) AS uniqCnt,
   entropy(s.value)::DECIMAL AS entropy,
   mode(s.value) AS mode
-FROM (
-  SELECT unnest(map_entries(RequestHeaders).apply(s -> {'key':s.key COLLATE NOCASE, 'value':s.value})) AS s FROM logs
-) GROUP BY ALL ORDER BY s.key, cnt DESC, uniqCnt DESC;
+FROM m GROUP BY ALL ORDER BY s.key, cnt DESC, uniqCnt DESC;
 
 .print "\n## Cookies Count\n"
 
@@ -152,16 +153,17 @@ SELECT *,count(*) AS cnt FROM (
 
 .print "\n## Response Headers Analysis\n"
 
+WITH m AS MATERIALIZED (
+  SELECT unnest(map_entries(ResponseHeaders).apply(s -> {'key':lower(s.key), 'value':s.value})) AS s FROM logs
+)
 SELECT
-  (100 * count(s.key)/ (SELECT count(*) FROM logs))::DECIMAL AS 'cum%',
+  (100 * count(s.key) / (SELECT count(*) FROM logs))::DECIMAL AS 'cum%',
   s.key,
   count(s.key) AS cnt,
   count(DISTINCT s.value) AS uniqCnt,
   entropy(s.value)::DECIMAL AS entropy,
   mode(s.value) AS mode
-FROM (
-  SELECT unnest(map_entries(ResponseHeaders).apply(s -> {'key':s.key COLLATE NOCASE, 'value':s.value})) AS s FROM logs
-) GROUP BY ALL ORDER BY s.key, cnt DESC, uniqCnt DESC;
+FROM m GROUP BY ALL ORDER BY s.key, cnt DESC, uniqCnt DESC;
 
 .print "\n## All Errors\n"
 
