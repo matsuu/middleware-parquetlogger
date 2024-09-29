@@ -1,8 +1,8 @@
 --
 -- $ cat nginx.sql | duckdb > nginx.md
 --
-CREATE OR REPLACE TABLE logs AS SELECT * REPLACE(StartTime - to_milliseconds((Latency*1e3)::INTEGER) AS StartTime, (Latency*1e9)::BIGINT AS Latency) FROM read_json('/var/log/nginx/access.log', columns = {
-  StartTime: 'TIMESTAMPTZ',
+CREATE OR REPLACE TABLE logs AS SELECT * REPLACE(to_timestamp(StartTime) - to_seconds(Latency) AS StartTime, (Latency*1e9)::BIGINT AS Latency) FROM read_json('/var/log/nginx/access.log', columns = {
+  StartTime: 'DECIMAL',
   Latency: 'DECIMAL',
   Protocol: 'VARCHAR',
   RemoteAddr: 'VARCHAR',

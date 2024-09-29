@@ -11,7 +11,7 @@ function headersToObj(headers) {
 
 function getJsonLog(r) {
   var res = {
-    StartTime: r.variables['time_iso8601'],
+    StartTime: r.variables['msec'],
     Latency: r.variables['request_time'],
     Protocol: r.httpVersion,
     RemoteAddr: r.variables['remote_addr'],
