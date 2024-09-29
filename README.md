@@ -128,6 +128,16 @@ func main() {
 
 # Analyze
 
+## duckdb
+
 ```sh
-cat parquet.sql | duckdb -cmd "SET VARIABLE path = '/tmp/log.parquet'" > result.md
+cat sql/duckdb/parquet.sql | duckdb -cmd "SET VARIABLE path = '/path/to/parquet'" > parquet.md
+cat sql/duckdb/nginx.sql | duckdb > nginx.md
+```
+
+## clickhouse
+
+```sh
+cat sql/clickhouse/parquet.sql | clickhouse > parquet.md
+cat sql/clickhouse/nginx.sql | clickhouse > nginx.md
 ```
