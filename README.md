@@ -6,7 +6,7 @@
 ```go
 import (
 	"github.com/labstack/echo/v4"
-	pl "github.com/matsuu/middleware-parquetlogger/echo"
+	pl "github.com/matsuu/middleware-parquetlogger/go/echo"
 )
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 import (
 	"net/http"
 
-	pl "github.com/matsuu/middleware-parquetlogger/http"
+	pl "github.com/matsuu/middleware-parquetlogger/go/http"
 )
 
 func main() {
@@ -55,7 +55,7 @@ func main() {
 ```go
 import (
 	"github.com/gin-gonic/gin"
-	pl "github.com/matsuu/middleware-parquetlogger/gin"
+	pl "github.com/matsuu/middleware-parquetlogger/go/gin"
 )
 
 func main() {
@@ -82,7 +82,7 @@ func main() {
 ```go
 import (
 	"github.com/fasthttp/router"
-	pl "github.com/matsuu/middleware-parquetlogger/fasthttp"
+	pl "github.com/matsuu/middleware-parquetlogger/go/fasthttp"
 	"github.com/valyala/fasthttp"
 )
 
@@ -111,7 +111,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	pl "github.com/matsuu/middleware-parquetlogger/chi"
+	pl "github.com/matsuu/middleware-parquetlogger/go/chi"
 )
 
 func main() {
@@ -131,13 +131,13 @@ func main() {
 ## duckdb
 
 ```sh
-cat sql/duckdb/parquet.sql | duckdb -cmd "SET VARIABLE path = '/path/to/parquet'" > parquet.md
+cat sql/duckdb/go.sql | duckdb -cmd "SET VARIABLE path = '/path/to/parquet'" > go.md
 cat sql/duckdb/nginx.sql | duckdb > nginx.md
 ```
 
 ## clickhouse
 
 ```sh
-cat sql/clickhouse/parquet.sql | clickhouse > parquet.md
+cat sql/clickhouse/go.sql | clickhouse > go.md
 cat sql/clickhouse/nginx.sql | clickhouse > nginx.md
 ```
