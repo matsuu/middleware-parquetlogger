@@ -1,7 +1,7 @@
 --
 -- $ cat parquet.sql | duckdb -cmd "SET VARIABLE path = '/tmp/log.parquet'" > result.md
 --
-CREATE OR REPLACE TABLE logs AS FROM read_parquet(getvariable('path'));
+CREATE OR REPLACE TABLE logs AS FROM read_parquet(ifnull(getvariable('path'), '/tmp/log.parquet'));
 
 .headers off
 .mode column
